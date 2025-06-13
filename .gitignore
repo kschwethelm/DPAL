@@ -1,0 +1,7 @@
+output
+data
+weights
+*.err
+*.out
+
+__pycache__/

@@ -1,0 +1,345 @@
+from __future__ import annotations
+
+from .utils import build_identity_map
+from .group import Group, GroupElement
+from .cyclicgroup import CyclicGroup
+from ....equivariant import group_theory
+from ....equivariant.group_theory.utils import psi, cycle_isclose
+
+import numpy as np
+from functools import partial
+
+from typing import Tuple, Callable, Iterable, List
+
+
+__all__ = ["SO2"]
+
+
+class SO2(Group):
+    def __init__(self, maximum_frequency: int = 6):
+        r"""
+        Build an instance of the special orthogonal group :math:`SO(2)` which contains continuous planar rotations.
+
+        A group element is a rotation :math:`r_\theta` of :math:`\theta \in [0, 2\pi)`, with group law
+        :math:`r_\alpha \cdot r_\beta = r_{\alpha + \beta}`.
+
+        Elements are implemented as floating point numbers :math:`\theta \in [0, 2\pi)`.
+
+        .. note ::
+            Since the group has infinitely many irreducible representations, it is not possible to build all of them.
+            Each irrep is associated to one unique frequency and the parameter ``maximum_frequency`` specifies
+            the maximum frequency of the irreps to build.
+            New irreps (associated to higher frequencies) can be manually created by calling the method
+            :meth:`~SO2.irrep` (see the method's documentation).
+
+
+        Subgroup Structure.
+
+        A subgroup of :math:`SO(2)` is a cyclic group :math:`C_M` with order :math:`M` which is generated
+        by :math:`r_{\frac{2\pi}{M}}`.
+
+        The ``id`` which identifies a subgroup is the integer :math:`M` (the order of the subgroup).
+
+
+        Args:
+            maximum_frequency (int, optional): the maximum frequency to consider when building the irreps of the group
+
+        """
+
+        assert isinstance(maximum_frequency, int) and maximum_frequency >= 0
+
+        super(SO2, self).__init__("SO(2)", True, True)
+
+        self.rotation_order = -1
+        self._maximum_frequency = maximum_frequency
+        self._identity = self.element(0.0)
+
+        self._build_representations()
+
+    @property
+    def generators(self) -> List[GroupElement]:
+        raise ValueError(
+            f"{self.name} is a continuous groups and "
+            f"some of its generators are infinitesimal. "
+            f"This is not currently supported"
+        )
+
+    @property
+    def subgroup_trivial_id(self):
+        return 1
+
+    @property
+    def subgroup_self_id(self):
+        return -1
+
+    ###########################################################################
+    # METHODS DEFINING THE GROUP LAW AND THE OPERATIONS ON THE GROUP'S ELEMENTS
+    ###########################################################################
+
+    def sample(self) -> GroupElement:
+        return self.element(np.random.random() * 2 * np.pi)
+
+    def grid(
+        self, N: int, type: str = "regular", seed: int = None
+    ) -> List[GroupElement]:
+        r"""
+        .. todo::
+            Add documentation
+
+        """
+
+        if type == "regular":
+            grid = [i * 2 * np.pi / N for i in range(N)]
+        elif type == "rand":
+            if isinstance(seed, int):
+                rng = np.random.RandomState(seed)
+            elif seed is None:
+                rng = np.random
+            else:
+                assert isinstance(seed, np.random.RandomState)
+                rng = seed
+            grid = [rng.random() * 2 * np.pi for i in range(N)]
+        else:
+            raise ValueError(f"Grid type {type} not recognized")
+
+        return [self.element(g) for g in grid]
+
+    def testing_elements(self, n=4 * 13) -> Iterable[GroupElement]:
+        r"""
+        A finite number of group elements to use for testing.
+        """
+        return iter([self.element(i * 2.0 * np.pi / n) for i in range(n)])
+
+    def __eq__(self, other):
+        if not isinstance(other, SO2):
+            return False
+        else:
+            return self.name == other.name
+
+    def _subgroup(
+        self, id: int
+    ) -> Tuple[
+        Group,
+        Callable[[GroupElement], GroupElement],
+        Callable[[GroupElement], GroupElement],
+    ]:
+        r"""
+        Restrict the current group to the cyclic subgroup :math:`C_M` with order :math:`M` which is generated
+        by :math:`r_{\frac{2\pi}{M}}`.
+
+        The method takes as input the integer :math:`M` identifying of the subgroup to build
+        (the order of the subgroup).
+
+        Args:
+            id (int): the integer :math:`M` identifying the subgroup
+
+        Returns:
+            a tuple containing
+                - the subgroup,
+                - a function which maps an element of the subgroup to its inclusion in the original group and
+                - a function which maps an element of the original group to the corresponding element in the subgroup (returns None if the element is not contained in the subgroup)
+
+        """
+        assert isinstance(id, int)
+
+        order = id
+
+        # Build the subgroup
+        if id > 0:
+            # take the elements of the group generated by "2pi/order"
+            sg = CyclicGroup(order)
+            parent_mapping = partial(_build_parent_map, self, order)
+            child_mapping = partial(_build_child_map, sg)
+        elif id == -1:
+            sg = self
+            parent_mapping = build_identity_map()
+            child_mapping = build_identity_map()
+        else:
+            raise ValueError()
+
+        return sg, parent_mapping, child_mapping
+
+    def _combine_subgroups(self, sg_id1, sg_id2):
+        sg_id1 = self._process_subgroup_id(sg_id1)
+        sg1, _, _ = self.subgroup(sg_id1)
+        sg_id2 = sg1._process_subgroup_id(sg_id2)
+
+        return sg_id2
+
+    def _build_representations(self):
+        r"""
+        Build the irreps for this group
+
+        """
+        # Build all the irreducible representations and add trivial representation
+        k = 0
+        self.irrep(k)
+
+        for k in range(self._maximum_frequency + 1):
+            self.irrep(k)
+
+        # Build all representations
+        # add all the irreps to the set of representations already built for this group
+        self.representations.update(**{irr.name: irr for irr in self.irreps()})
+
+    def bl_irreps(self, L: int) -> List[Tuple]:
+        r"""
+        Returns a list containing the id of all irreps of frequency smaller or equal to ``L``.
+        This method is useful to easily specify the irreps to be used to instantiate certain objects, e.g. the
+        Fourier based non-linearity :class:`~escnn.nn.FourierPointwise`.
+        """
+        assert 0 <= L, L
+        return [(l,) for l in range(L + 1)]
+
+    @property
+    def trivial_representation(self) -> group_theory.Representation:
+        return self.irrep(0)
+
+    def standard_representation(self) -> group_theory.Representation:
+        r"""
+        Standard representation of :math:`\SO2` as 2x2 rotation matrices
+
+        This is equivalent to ``self.irrep(1)``.
+
+        """
+        return self.irrep(1)
+
+    def irrep(self, k: int) -> group_theory.IrreducibleRepresentation:
+        r"""
+        Build the irrep with rotational frequency :math:`k` of :math:`SO(2)`.
+        Notice: the frequency has to be a non-negative integer.
+
+        Args:
+            k (int): the frequency of the irrep
+
+        Returns:
+            the corresponding irrep
+
+        """
+        assert k >= 0
+
+        name = f"irrep_{k}"
+        id = (k,)
+
+        if id not in self._irreps:
+            irrep = partial(_build_irrep_so2, k)
+            character = partial(_build_char_so2, k)
+
+            if k == 0:
+                # Trivial representation
+                supported_nonlinearities = ["pointwise", "norm", "gated", "gate"]
+                self._irreps[id] = group_theory.IrreducibleRepresentation(
+                    self,
+                    id,
+                    name,
+                    irrep,
+                    1,
+                    "R",
+                    supported_nonlinearities=supported_nonlinearities,
+                    character=character,
+                    frequency=0,
+                )
+            else:
+                # 2 dimensional Irreducible group_theory.Representations
+                supported_nonlinearities = ["norm", "gated"]
+                self._irreps[id] = group_theory.IrreducibleRepresentation(
+                    self,
+                    id,
+                    name,
+                    irrep,
+                    2,
+                    "C",
+                    supported_nonlinearities=supported_nonlinearities,
+                    character=character,
+                    frequency=k,
+                )
+
+        return self._irreps[id]
+
+    def clebsch_gordan_coeff(self, m, n, j) -> np.ndarray:
+        (m,) = self.get_irrep_id(m)
+        (n,) = self.get_irrep_id(n)
+        (j,) = self.get_irrep_id(j)
+
+        rho_m = self.irrep(m)
+        rho_n = self.irrep(n)
+        rho_j = self.irrep(j)
+
+        if m == 0 or n == 0:
+            if j == m + n:
+                return np.eye(rho_j.size).reshape(rho_m.size, rho_n.size, 1, rho_j.size)
+            else:
+                return np.zeros((rho_m.size, rho_n.size, 0, rho_j.size))
+        else:
+            cg = np.array(
+                [
+                    [1.0, 0.0, 1.0, 0.0],
+                    [0.0, 1.0, 0.0, 1.0],
+                    [0.0, -1.0, 0.0, 1.0],
+                    [1.0, 0.0, -1.0, 0.0],
+                ]
+            ) / np.sqrt(2)
+            if j == m + n:
+                cg = cg[:, 2:]
+            elif j == m - n:
+                cg = cg[:, :2]
+            elif j == n - m:
+                cg = cg[:, :2]
+                cg[:, 1] *= -1
+            else:
+                cg = np.zeros((rho_m.size, rho_n.size, 0, rho_j.size))
+
+            return cg.reshape(rho_n.size, rho_m.size, -1, rho_j.size).transpose(
+                1, 0, 2, 3
+            )
+
+    def _tensor_product_irreps(self, J: int, l: int) -> List[Tuple[Tuple, int]]:
+        (J,) = self.get_irrep_id(J)
+        (l,) = self.get_irrep_id(l)
+
+        if J == 0:
+            return [((l,), 1)]
+        elif l == 0:
+            return [((J,), 1)]
+        elif l == J:
+            return [
+                ((0,), 2),
+                ((l + J,), 1),
+            ]
+        else:
+            return [
+                ((np.abs(l - J),), 1),
+                ((l + J,), 1),
+            ]
+
+
+def _build_irrep_so2(k: int, e: GroupElement):
+    assert k >= 0
+    if k == 0:
+        # Trivial representation
+        return np.eye(1)
+    else:
+        # 2 dimensional Irreducible group_theory.Representations
+        return psi(e.value, k=k)
+
+
+def _build_char_so2(k: int, e: GroupElement) -> float:
+    assert k >= 0
+    if k == 0:
+        # Trivial representation
+        return 1.0
+    else:
+        # 2 dimensional Irreducible group_theory.Representations
+        return 2 * np.cos(k * e.value)
+
+
+def _build_parent_map(G: SO2, order: int, e: GroupElement) -> GroupElement:
+    return G.element(e.value * 2 * np.pi / order)
+
+
+def _build_child_map(sg: "CyclicGroup", e: GroupElement) -> GroupElement:
+    radians = e.value
+    if not cycle_isclose(radians, 0.0, 2.0 * np.pi / sg.rotation_order):
+        return None
+    else:
+        return sg.element(int(round(radians * sg.rotation_order / (2.0 * np.pi))))

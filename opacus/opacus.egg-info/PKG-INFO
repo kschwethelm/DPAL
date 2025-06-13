@@ -1,0 +1,46 @@
+Metadata-Version: 2.1
+Name: opacus
+Version: 1.4.1
+Summary: Train PyTorch models with Differential Privacy
+Home-page: https://opacus.ai
+Author: The Opacus Team
+License: Apache-2.0
+Project-URL: Documentation, https://opacus.ai/api
+Project-URL: Source, https://github.com/pytorch/opacus
+Keywords: PyTorch,Differential Privacy,DP-SGD,DP SGD,Privacy Preserving Machine Learning,PPML,PPAI
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Scientific/Engineering
+Requires-Python: >=3.7.5
+Description-Content-Type: text/markdown
+Requires-Dist: numpy<2.0,>=1.15
+Requires-Dist: torch>=2.0
+Requires-Dist: scipy>=1.2
+Requires-Dist: opt-einsum>=3.3.0
+Provides-Extra: dev
+Requires-Dist: torch; extra == "dev"
+Requires-Dist: torchvision>=0.9.1; extra == "dev"
+Requires-Dist: tqdm>=4.40; extra == "dev"
+Requires-Dist: requests>=2.25.1; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+Requires-Dist: sphinx; extra == "dev"
+Requires-Dist: sphinx-autodoc-typehints; extra == "dev"
+Requires-Dist: mypy>=0.760; extra == "dev"
+Requires-Dist: isort; extra == "dev"
+Requires-Dist: hypothesis; extra == "dev"
+Requires-Dist: tensorboard; extra == "dev"
+Requires-Dist: datasets; extra == "dev"
+Requires-Dist: transformers; extra == "dev"
+Requires-Dist: scikit-learn; extra == "dev"
+Requires-Dist: pytorch-lightning; extra == "dev"
+Requires-Dist: lightning-bolts; extra == "dev"
+Requires-Dist: jsonargparse[signatures]>=3.19.3; extra == "dev"
+Requires-Dist: coverage; extra == "dev"
+
+long_description

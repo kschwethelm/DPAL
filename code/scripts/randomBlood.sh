@@ -1,0 +1,18 @@
+python train.py \
+    --exp_name random \
+    --output_dir output \
+    --seed 1 \
+    --epochs 90 \
+    --batch_size 512 \
+    --max_physical_batch_size 512 \
+    --learning_rate 2e-3 \
+    --optimizer nadam \
+    --dataset blood \
+    --data_root datasets \
+    --model resnet9 \
+    --al False \
+    --labeling_budget 2500 \
+    --epsilon 8.0 \
+    --delta 4e-4 \
+    --max_sample_grad_norm 2.0 \
+    --use_functorch True
