@@ -5,6 +5,8 @@ import pandas as pd
 import torch
 from torch.utils.data import TensorDataset
 
+from .load_dataset import download_and_extract
+
 import transformers
 from transformers.data.processors.utils import InputExample
 from transformers.data.processors.glue import glue_convert_examples_to_features
@@ -80,6 +82,10 @@ def get_slni_dataset(root, tokenizer, split, max_seq_length=128):
     labels = ["contradiction", "entailment", "neutral"]
 
     snli_folder = os.path.join(root, "snli_1.0")
+
+    if not os.path.exists(snli_folder):
+        download_and_extract(data_dir=root)
+
     path =  os.path.join(snli_folder, f"snli_1.0_{split}.txt")
 
     df = pd.read_csv(path, sep='\t')

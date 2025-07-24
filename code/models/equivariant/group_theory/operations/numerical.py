@@ -54,7 +54,7 @@ def null(
     else:
         if randomized_svd is not None:
             k = min(A.shape)
-            u, s, vh = randomized_svd(A, n_components=k)
+            u, s, vh = randomized_svd(np.asarray(A), n_components=k)
         else:
             u, s, vh = linalg.svd(A, full_matrices=False)
 

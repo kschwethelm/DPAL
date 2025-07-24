@@ -1,12 +1,18 @@
-# 🔒 Differentially Private Active Learning
+# Differentially Private Active Learning
 
-Official PyTorch implementation of the SATML 2025 paper "[Differentially Private Active Learning: Balancing Effective Data Selection and Privacy.](https://www.computer.org/csdl/proceedings-article/satml/2025/171100a858/26VnrxNwt9K)" 📄
+[![Paper](https://img.shields.io/badge/Paper-SaTML%202025-blue)](https://www.computer.org/csdl/proceedings-article/satml/2025/171100a858/26VnrxNwt9K)
+[![arXiv](https://img.shields.io/badge/arXiv-2410.00542-b31b1b.svg)](https://arxiv.org/abs/2410.00542)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/)
 
-## 🧠 Abstract
+Official PyTorch implementation of the SATML 2025 paper "[Differentially Private Active Learning: Balancing Effective Data Selection and Privacy.](https://www.computer.org/csdl/proceedings-article/satml/2025/171100a858/26VnrxNwt9K)"
+
+## Abstract
 
 This work introduces **differentially private active learning (DP-AL)** for standard machine learning settings, addressing the previously unexplored challenge of combining active learning with differential privacy. Inspired by **individual privacy accounting**, we propose **step amplification**, a technique that optimizes data utilization by leveraging individual sampling probabilities in batch creation. Through experiments on vision and NLP tasks, we demonstrate that while DP-AL can improve performance on specific datasets, it also reveals fundamental trade-offs between privacy, model accuracy, and data selection effectiveness in privacy-constrained environments.
 
-## 📚 Citing our work
+## Citing our work
 
 If you find our work useful for your research, please cite our paper as follows:
 
@@ -14,7 +20,7 @@ If you find our work useful for your research, please cite our paper as follows:
 @INPROCEEDINGS {schwethelm2025dpal,
 author = {Schwethelm, Kristian and Kaiser, Johannes and Kuntzer, Jonas and Yigitsoy, Mehmet and Ruckert, Daniel and Kaissis, Georgios},
 booktitle = {2025 IEEE Conference on Secure and Trustworthy Machine Learning (SaTML)},
-title = {{ Differentially Private Active Learning: Balancing Effective Data Selection and Privacy }},
+title = {{Differentially Private Active Learning: Balancing Effective Data Selection and Privacy}},
 year = {2025},
 volume = {},
 ISSN = {},
@@ -27,49 +33,46 @@ month = {apr}
 }
 ```
 
-## 📄 License
+## License
 This code is released under the [MIT License](LICENSE)
 
-## 🚀 Installation
+## Installation
 
-### 📋 Requirements
+### Setting Up the Environment
 
-- Python>=3.8 🐍
+#### Using UV Package Manager
 
-   We recommend using [Conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html):
+[UV](https://docs.astral.sh/uv/) is a fast dependency resolver and Python package manager that we use for this project.
 
+1. **Install UV**
+   - Follow the installation instructions at the [UV documentation](https://docs.astral.sh/uv/)
+   - Quick install: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+2. **Setup Project Environment**
+   - Clone this repository: `git clone https://github.com/kschwethelm/DPAL`
+   - Navigate to the project directory: `cd DPAL`
+
+3. **Manage Dependencies**
+   - Install dependencies:
+     ```bash
+     uv sync
+     ```
+
+4. **Activate the Environment**
    ```bash
-   conda create -n DPAL python=3.10 pip 
-   conda activate DPAL
+   source .venv/bin/activate
    ```
 
-- Install local Opacus package 🔧
-    ```bash
-    pip install -e opacus
-    ```
+### Dataset preparation
 
-- PyTorch, torchvision 🔥
+The CheXpert dataset requires manual download. Download training and validation images from [kaggle](https://www.kaggle.com/datasets/ashery/chexpert) and the test images as described in this [repo](https://github.com/rajpurkarlab/cheXpert-test-set-labels).
 
-   Get the correct command from [here](https://pytorch.org/get-started/locally/). For example, for Linux systems with CUDA version 12.4:
-   ```bash
-   conda install pytorch torchvision pytorch-cuda=12.4 -c pytorch -c nvidia
-   ```
+To resize all images and get the correct data structure, adapt dataset path in [code/datasets/chexpert/split_resize.py](code/datasets/chexpert/split_resize.py) and run the script. For memmap creation, adapt dataset path in [code/datasets/chexpert/create_memmap.py](code/datasets/chexpert/create_memmap.py) and run the script.
 
-- Additional requirements 📦
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Pretrained models
 
-### 📊 Dataset preparation
+For our CheXpert experiments we use a pretrained NFNet-F0 model. Download the pretrained weights from the [official repository](https://github.com/deepmind/deepmind-research/tree/master/nfnets#pre-trained-weights) and place them inside the folder `code/models/weights`.
 
-CheXpert and SNLI datasets require manual downloads. For CheXpert, download training and validation images from [kaggle](https://www.kaggle.com/datasets/ashery/chexpert) 📥 and the test images as described in this [repo](https://github.com/rajpurkarlab/cheXpert-test-set-labels) 🐱. Download the SNLI dataset using this [link](https://nlp.stanford.edu/projects/snli/snli_1.0.zip).
-
-For CheXpert, adapt and run [split_resize.py](code/datasets/chexpert/split_resize.py) to resize all images and get the correct data structure. 
-
-### 🤖 Pretrained models
-
-For our CheXpert experiments we use a pretrained NFNet-F0 model. Download the pretrained weights from the [official repository](https://github.com/deepmind/deepmind-research/tree/master/nfnets#pre-trained-weights) and place them inside the folder `code/model/weights` ⚡️.
-
-## 💻 Usage
+## Usage
 
 Run a script file from folder `code/scripts`.

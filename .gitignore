@@ -3,5 +3,6 @@ data
 weights
 *.err
 *.out
+.venv/
 
 __pycache__/

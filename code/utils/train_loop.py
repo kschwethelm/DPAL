@@ -176,6 +176,7 @@ class Trainer():
                 ddp_logging(f"Epoch ({epoch+1}/{self.num_epochs}), Step {local_steps}, Global step {self.steps} - " + log_str, self.rank)
 
                 if (self.save_interval > 0) and ((epoch+1) % self.save_interval) == 0:
+                    ddp_logging.info("Saving model...", self.rank)
                     self.save(epoch+1)
                 if num_steps is not None and self.steps >= num_steps:
                     break

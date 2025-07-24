@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: opacus
 Version: 1.4.1
 Summary: Train PyTorch models with Differential Privacy
@@ -42,5 +42,17 @@ Requires-Dist: pytorch-lightning; extra == "dev"
 Requires-Dist: lightning-bolts; extra == "dev"
 Requires-Dist: jsonargparse[signatures]>=3.19.3; extra == "dev"
 Requires-Dist: coverage; extra == "dev"
+Dynamic: author
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: keywords
+Dynamic: license
+Dynamic: project-url
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
 
 long_description
